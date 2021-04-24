@@ -1,12 +1,13 @@
 #include <iWifi.h>
 #include <WiFi.h>
+#include <Wire.h>
 #include <esp_wifi.h>
+
 #include <colors.h>
-#include <definitions.h>
 #include <vector>
 
 /* Class constructor */
-iWifi::iWifi(const char *ssid, const char *password, WiFiClient client)
+iWifi::iWifi(const char *ssid, const char *password, WiFiClient &client)
 {
     _ssid = ssid;
     _password = password;
@@ -29,7 +30,7 @@ boolean iWifi::get_mode() { return _enable_promis_mode; }
 void iWifi::setup_sta_mode()
 {
     delay(250);
-    Serial.println("[X] Connecting to " + String(BOLD) + String(_ssid) + String(RESET));
+    Serial.println("[X] Connecting to " + String(_ssid));
     WiFi.mode(WIFI_STA);
     WiFi.begin(_ssid, _password);
 
@@ -39,8 +40,7 @@ void iWifi::setup_sta_mode()
         Serial.print(".");
     }
 
-    Serial.println("\n[X] Connected to " + String(BOLD) + String(_ssid) + String(RESET));
-    Serial.println("IP address: " + String(BOLD) + String(WiFi.localIP()) + String(RESET));
+    Serial.println("\n[X] Connected to " + String(_ssid) + " as: " + ip_to_str(WiFi.localIP()));
 }
 
 void iWifi::sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
@@ -82,8 +82,9 @@ void iWifi::sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
 
     // If device is new in the room
     if (new_device)
-        _devices_list.push_back({_devices_list.size() - 1, mac_dev, DEFAULT_TTL, ""});
-}
+        _devices_list.size() == 0 ?
+            _devices_list.push_back({0, mac_dev, 64, ""}) : _devices_list.push_back({int(_devices_list.size() - 1), mac_dev, 64, ""});
+}   
 
 void iWifi::setup_promiscuous_mode()
 {
@@ -95,6 +96,10 @@ void iWifi::setup_promiscuous_mode()
     esp_wifi_start();
 }
 
-
-
-
+String iWifi::ip_to_str(IPAddress ip){
+  String str="";
+  unsigned int i;
+  for (i=0; i<4; i++)
+    str += i  ? "." + String(ip[i]) : String(ip[i]);
+  return str;
+}

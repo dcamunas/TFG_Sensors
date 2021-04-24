@@ -5,72 +5,27 @@
 #include <PubSubClient.h>
 
 #include <definitions.h>
+#include <iWifi.h>
 
 /* Global variables */
 WiFiClient esp_client;
+iWifi my_wifi(ssid, password, esp_client);
 PubSubClient client(esp_client);
 
-
-void setup_wifi()
-{
-    delay(10);
-    Serial.println("Connecting to " + String(ssid));
-
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.print(".");
-    }
-
-    //randomSeed(micros());
-
-    Serial.println("\nWiFi connected");
-    Serial.println("IP address: " + String(WiFi.localIP()));
-}
 
 // ------------------------------------------------------------------------------
 
 void setup()
 {
     Serial.begin(9600);
+    my_wifi.setup_sta_mode();
+    
+    
+    //client.setServer(mqtt_server, 1883);
 
-    setup_wifi();
-    client.setServer(mqtt_server, 1883);
-
-    pinMode(CO2_PIN, INPUT);
 }
 
 // ------------------------------------------------------------------------------
-
-float read_co2_sensor(){
-  int sensor_value = analogRead(co2_pin), voltage_diference;
-  Serial.println(sensor_value);
-
-  // The analog signal is converted to a voltage
-  float concentration = 0.0, voltage = sensor_value * (3300 / 4095.0);
-
-  if (voltage == 0)
-  {
-    Serial.println("Fault");
-  }
-  else if (voltage < 400)
-  {
-    Serial.println("preheating");
-  }
-  else
-  {
-    voltage_diference = voltage - 400;
-    concentration = (voltage_diference * 50.0) / 16.0;
-    
-    // Print Voltage and concentration
-    //Serial.println("[X] Voltage: " + String(voltage) + " mv  ||  Concentration: " + String(concentration) + " ppm.");
-  }
-
-  return concentration;
-}
 
 void reconnect() {
   // Loop until we're reconnected
@@ -101,17 +56,10 @@ void reconnect() {
 
 void loop()
 {
-    if(!client.connected())
+    /*if(!client.connected())
     {
         reconnect();
     }
 
-    client.loop();
-
-  String message = String("concentration,location=us ppm="+String(read_co2_sensor()));
-
-  Serial.println(message);
-  client.publish("sensors", message.c_str());
-
-  delay(5000);
+    client.loop();*/
 }
