@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Wire.h>
-#include <esp_wifi.h>
+//#include <esp_wifi.h>
 #include <vector>
+
+#define MAX_CHANNEL 13 //max Channel -> US = 11, EU = 13, Japan = 14
 
 /* Device */
 struct device
@@ -45,25 +47,24 @@ private:
     boolean _enable_promis_mode;
     WiFiClient _client;
     unsigned int _current_channel;
-    //unsigned int _devices_number;
-    std::vector<device> _devices_list;
-    
 
 public:
+    std::vector<device> devices_list;
+
     iWifi(const char *ssid, const char *password, WiFiClient &client);
     ~iWifi();
-    void set_mode(boolean mode);
-    boolean get_mode();
+    void set_channel(unsigned channel_to_change);
+    unsigned int get_channel();
+    unsigned int get_devices_number();
     /* STA MODE */
     void setup_sta_mode();
     /* PROMISCOUS MODE */
     void setup_promiscuous_mode();
     void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type);
-    void promiscuous_loop();
+    void start_promiscuous_mode();
     boolean there_are_dev(int devs_number);
     void check_max_channel();
     void update_ttl();
     void show_people();
     String ip_to_str(IPAddress ip);
-
 };
