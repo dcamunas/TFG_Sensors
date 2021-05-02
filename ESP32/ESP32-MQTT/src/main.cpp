@@ -7,7 +7,7 @@
 // Update these with values suitable for your network.
 const char *ssid = "Home";
 const char *password = "David1208Helena";
-const char *mqtt_server = "192.168.1.141";
+const char *mqtt_server = "192.168.1.170";
 
 const unsigned int co2_pin = 35;
 
@@ -114,7 +114,7 @@ void loop()
   Serial.println(msg);
 
   // Send the message on the sensors topic
-  client.publish("sensors", msg);
+  client.publish("test", msg);
 
   delay(5000);
 

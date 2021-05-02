@@ -45,13 +45,13 @@ private:
     const char *_ssid;
     const char *_password;
     boolean _enable_promis_mode;
-    WiFiClient _client;
+    //WiFiClient _client;
     unsigned int _current_channel;
 
 public:
     std::vector<device> devices_list;
 
-    iWifi(const char *ssid, const char *password, WiFiClient &client);
+    iWifi(const char *ssid, const char *password);
     ~iWifi();
     void set_channel(unsigned channel_to_change);
     unsigned int get_channel();
