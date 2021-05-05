@@ -4,14 +4,17 @@
 //#include <SPI.h>
 #include <PubSubClient.h>
 #include <esp_wifi.h>
-
 #include <definitions.h>
 #include <iWifi.h>
+#include <vector>
 
 /* Global variables */
 WiFiClient esp_client;
-iWifi my_wifi(ssid, password);
 PubSubClient client(esp_client);
+iWifi my_wifi(ssid, password);
+
+int current_devices_number;
+
 
 void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
 {
@@ -46,30 +49,23 @@ void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
     mac_dev += packet[i];
   mac_dev.toUpperCase();
 
-  for (i = 0; i < my_wifi.devices_list.size() && new_device; i++)
-    if (mac_dev == my_wifi.devices_list[i].mac)
-      new_device = false;
+  if (!my_wifi.is_know_device(mac_dev))
+  {
+    for (i = 0; i < my_wifi.devices_list.size() && new_device; i++)
+      if (mac_dev == my_wifi.devices_list[i].mac)
+        new_device = false;
 
-  // If device is new in the room
-  if (new_device)
-    my_wifi.devices_list.size() == 0 ? my_wifi.devices_list.push_back({0, mac_dev, 64, ""}) : my_wifi.devices_list.push_back({int(my_wifi.devices_list.size() - 1), mac_dev, 64, ""});
+    // If device is new in the room
+    if (new_device)
+      my_wifi.devices_list.size() == 0 ? my_wifi.devices_list.push_back({0, mac_dev, 64, ""}) : my_wifi.devices_list.push_back({int(my_wifi.devices_list.size() - 1), mac_dev, 64, ""});
+  }
 }
-
-void start_promiscuous_mode()
-{
-  delay(250);
-  wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
-  esp_wifi_init(&config);
-  esp_wifi_set_storage(WIFI_STORAGE_RAM);
-  esp_wifi_set_mode(WIFI_MODE_NULL);
-}
-
 // ------------------------------------------------------------------------------
 
 void setup()
 {
-  Serial.begin(9600);
-  //my_wifi.setup_sta_mode();
+  //std::vector<String> ::iterator it;
+  esp_wifi_set_promiscuous_rx_cb(&sniffer);
 }
 
 // ------------------------------------------------------------------------------
@@ -109,32 +105,33 @@ void promiscuous_loop()
 {
   // Activate promis mode
   esp_wifi_start();
-  esp_wifi_set_promiscuous(true);
+  /*esp_wifi_set_promiscuous(true);
   esp_wifi_set_promiscuous_filter(&filter);
   esp_wifi_set_promiscuous_rx_cb(sniffer);
 
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
-
+*/
   Serial.println("Scanning...");
   my_wifi.check_max_channel();
-  delay(5000);
   my_wifi.update_ttl();
   my_wifi.show_people();
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
   my_wifi.set_channel(my_wifi.get_channel() + 1);
 
   // Desactivate promiscuous mode
-  esp_wifi_stop();
-  esp_wifi_set_promiscuous(false);
+  //esp_wifi_stop();
 }
 
 void loop()
 {
-  start_promiscuous_mode();
+  /*
+  esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
+  //start_promiscuous_mode();
   promiscuous_loop();
 
-  delay(1000);
+  delay(10000);
 
+  esp_wifi_set_promiscuous(false);
   my_wifi.setup_sta_mode();
   client.setServer(mqtt_server_vm, mosquitto_port);
 
@@ -144,7 +141,11 @@ void loop()
   }
   client.loop();
 
-  String test = "Hola";
+  String number = (String)my_wifi.get_devices_number();
 
-  client.publish("test", test.c_str());
+  client.publish("test", number.c_str());
+  delay(1000);
+  esp_wifi_set_promiscuous(true);
+*/
+
 }

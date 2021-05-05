@@ -2,7 +2,7 @@
 const char *ssid = "Home";
 const char *password = "David1208Helena";
 const char *mqtt_server_nuc = "192.168.1.141";
-const char *mqtt_server_vm = "192.168.1.170";
+const char *mqtt_server_vm = "192.168.1.159";
 unsigned int mosquitto_port = 1883;
 
 
