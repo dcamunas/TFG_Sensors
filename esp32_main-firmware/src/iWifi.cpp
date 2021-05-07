@@ -1,9 +1,7 @@
+#include <Arduino.h>
 #include <iWifi.h>
 #include <WiFi.h>
 #include <Wire.h>
-#include <esp_wifi.h>
-#include <iostream>
-#include <colors.h>
 #include <vector>
 
 /* Class constructor */
@@ -11,10 +9,7 @@ iWifi::iWifi(const char *ssid, const char *password)
 {
   _ssid = ssid;
   _password = password;
-  _enable_promis_mode = false;
-  //_client = client;
   _current_channel = 1;
-  _devices_number = 0;
 }
 
 /* Class destructor */
@@ -26,9 +21,10 @@ void iWifi::set_channel(unsigned int channel_to_change)
 }
 
 unsigned int iWifi::get_channel() { return _current_channel; }
-unsigned int iWifi::get_devices_number() { return devices_list.size(); }
+unsigned int iWifi::get_devices_number() { return _devices_list.size(); }
+String iWifi::get_dev_mac(unsigned int index){return _devices_list.at(index).mac;}
 
-void iWifi::setup_sta_mode()
+void iWifi::connect_wifi()
 {
   delay(250);
   Serial.println("[X] Connecting to " + String(_ssid));
@@ -55,20 +51,20 @@ String iWifi::format_mac(IPAddress ip)
 
 void iWifi::show_people()
 {
-  for (int i = 0; i < devices_list.size(); i++)
+  for (int i = 0; i < _devices_list.size(); i++)
   {
-    if (devices_list[i].mac != "")
+    if (_devices_list[i].mac != "")
     {
-      Serial.println("[X] DEVICE ID: " + String(devices_list[i].id) + " || MAC ADR: " + devices_list[i].mac + " || TTL: " + devices_list[i].ttl + " || STATE: " + devices_list[i].state);
+      Serial.println("[X] DEVICE ID: " + String(_devices_list[i].id) + " || MAC ADR: " + _devices_list[i].mac + " || TTL: " + _devices_list[i].ttl + " || STATE: " + _devices_list[i].state);
     }
   }
-  Serial.println("------------------------------------------------\n \t[X] Totals Devices: " + String(devices_list.size()));
+  Serial.println("------------------------------------------------\n \t[X] Totals Devices: " + String(_devices_list.size()));
   Serial.println("------------------------------------------------------------------------------------------------\n\n");
 }
 
 /* --------------------------------------------------------------------- */
 
-bool iWifi::is_know_device(String mac_dev)
+boolean iWifi::is_know_device(String mac_dev)
 {
   for (unsigned int i = 0; i < know_devices.size(); i++)
   {
@@ -84,14 +80,16 @@ void iWifi::check_max_channel()
     _current_channel = 1;
 }
 
-void iWifi::update_ttl()
-{
-  for (unsigned int i = 0; i < devices_list.size(); i++)
-  {
-    devices_list[i].ttl--;
+void iWifi::add_device(unsigned int id, String mac, int ttl, String state){_devices_list.push_back({id, mac, ttl, state});}
 
-    if (devices_list[i].ttl <= 0)
-      devices_list.erase(devices_list.begin() + i);
+void iWifi::update_devices()
+{
+  for (unsigned int i = 0; i < _devices_list.size(); i++)
+  {
+    _devices_list[i].ttl--;
+
+    if (_devices_list[i].ttl <= 0)
+      _devices_list.erase(_devices_list.begin() + i);
   }
 }
 
