@@ -12,7 +12,7 @@
 /* Global variables */
 WiFiClient esp_client;
 PubSubClient client(esp_client);
-iWifi my_wifi(ssid, password);
+iWifi my_wifi(SSID, PASSWORD);
 
 unsigned int old_devices_number = 0;
 unsigned long send_time;
@@ -55,11 +55,13 @@ void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
   {
     for (i = 0; i < my_wifi.get_devices_number() && new_device; i++)
       if (mac_dev == my_wifi.get_dev_mac(i))
+      {
+        my_wifi.set_dev_ttl(i);
         new_device = false;
-
+      }
     // If device is new in the room
     if (new_device)
-      my_wifi.get_devices_number() == 0 ? my_wifi.add_device(0, mac_dev, 64, "") : my_wifi.add_device(my_wifi.get_devices_number()-1, mac_dev, 64, "");
+      my_wifi.get_devices_number() == 0 ? my_wifi.add_device(0, mac_dev, DEFAULT_TTL) : my_wifi.add_device(my_wifi.get_devices_number()-1, mac_dev, DEFAULT_TTL);
   }
 }
 // ------------------------------------------------------------------------------
@@ -69,7 +71,7 @@ void setup()
   Serial.begin(9600);
   wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
   esp_wifi_init(&config);
-  //esp_wifi_set_storage(WIFI_STORAGE_RAM);
+  esp_wifi_set_storage(WIFI_STORAGE_RAM);
   esp_wifi_set_mode(WIFI_MODE_STA);
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
 
@@ -112,7 +114,7 @@ void send_mqtt_data()
   /* Setup MQTT */
   esp_wifi_set_promiscuous(false);
   my_wifi.connect_wifi();
-  client.setServer(mqtt_server_vm, mosquitto_port);
+  client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
   if(!client.connected())
     reconnect();
   client.loop();
@@ -151,7 +153,7 @@ void loop()
   if ((millis() - send_time) >= MAX_SEND_TIME)
     send_mqtt = true;
 
-  my_wifi.update_devices();
+  my_wifi.purge_devices();
   my_wifi.show_people();
 
   if (send_mqtt)
@@ -161,4 +163,5 @@ void loop()
   }
   //esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
   my_wifi.set_channel(my_wifi.get_channel() + 1);
+  delay(2500);
 }

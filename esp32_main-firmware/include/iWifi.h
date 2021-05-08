@@ -3,7 +3,10 @@
 #include <Wire.h>
 #include <vector>
 
-#define MAX_CHANNEL 13 //max Channel -> US = 11, EU = 13, Japan = 14
+const unsigned int MAX_CHANNEL = 13; //max Channel -> US = 11, EU = 13, Japan = 14
+const unsigned int DEFAULT_TTL = 24;
+const unsigned int FIRST_CHANNEL = 1;
+
 
 /* Device */
 struct device
@@ -11,7 +14,6 @@ struct device
   unsigned int id;
   String mac;
   int ttl;
-  String state;
 };
 
 class iWifi
@@ -40,12 +42,13 @@ public:
   unsigned int get_channel();
   unsigned int get_devices_number();
   String get_dev_mac(unsigned int index);
+  void set_dev_ttl(unsigned int index);
   /* STA MODE */
   void connect_wifi();
   boolean there_are_dev(int devs_number);
   void check_max_channel();
-  void add_device(unsigned int id, String mac, int ttl, String state);
-  void update_devices();
+  void add_device(unsigned int id, String mac, int ttl);
+  void purge_devices();
   void show_people();
   boolean is_know_device(String mac_dev);
   String format_mac(IPAddress ip);
