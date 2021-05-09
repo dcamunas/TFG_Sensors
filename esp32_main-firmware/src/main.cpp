@@ -1,42 +1,27 @@
 #include <Arduino.h>
-#include <WiFi.h>
 #include <PubSubClient.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEAdvertisedDevice.h>
-#include <BLEScan.h>
-
 #include <definitions.h>
-#include <vector>
+#include<iWifi.h>
+#include <iBle.h>
 
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
-{
-  void onResult(BLEAdvertisedDevice advertisedDevice)
-  {
-    Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
-  }
-};
 
 /* Global variables */
 WiFiClient esp_client;
 PubSubClient client(esp_client);
-BLEScan *ble_scan;
+iWifi my_wifi(SSID, PASSWORD);
+iBle my_ble;
 
 unsigned long send_time;
-unsigned int devs_count = 0;
 
-void connect_wifi();
 void reconnect();
 void send_mqtt_data();
-void setup_ble();
-void scan_ble(boolean &send_mqtt);
-String format_mac(IPAddress ip);
+
 
 void setup()
 {
   Serial.begin(BAUD_RATE);
-  connect_wifi();
-  setup_ble();
+  my_wifi.connect_wifi();
+  my_ble.setup_ble();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
 }
 
@@ -44,11 +29,10 @@ void loop()
 {
   boolean send_mqtt = true;
 
-  scan_ble(send_mqtt);
+  my_ble.scan_ble(send_mqtt);
 
   if (send_mqtt)
   {
-    //my_wifi.show_people();
     send_mqtt_data();
   }
   //delay(SCAN_TIME * 1000);
@@ -87,7 +71,7 @@ void send_mqtt_data()
     reconnect();
   client.loop();
 
-  msg = String(devs_count);
+  msg = String(my_ble.get_devices_number());
   if (client.publish("test", msg.c_str()))
     Serial.println("Succesfully published.\n");
   else
@@ -96,52 +80,4 @@ void send_mqtt_data()
   client.disconnect();
 
   send_time = millis();
-}
-
-// ------------------------------------------------------------------------------
-
-void setup_ble()
-{
-  BLEDevice::init("");
-  ble_scan = BLEDevice::getScan(); //create new scan
-  ble_scan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  ble_scan->setActiveScan(true); //active scan uses more power, but get results faster
-  ble_scan->setInterval(100);
-  ble_scan->setWindow(99); // less or equal setInterval value
-}
-
-void scan_ble(boolean &send_mqtt)
-{
-  BLEScanResults found_devices = ble_scan->start(SCAN_TIME, false);
-  devs_count = found_devices.getCount();
-  Serial.println(devs_count);
-  Serial.println("Scan done!");
-  ble_scan->setActiveScan(false);
-  ble_scan->clearResults(); // delete results fromBLEScan buffer to release memory
-  delay(2000);
-}
-
-void connect_wifi()
-{
-  delay(250);
-  Serial.println("[X] Connecting to " + String(SSID));
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(SSID, PASSWORD);
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\n[X] Connected to " + String(SSID) + " as: " + format_mac(WiFi.localIP()));
-}
-
-String format_mac(IPAddress ip)
-{
-  String str = "";
-  unsigned int i;
-  for (i = 0; i < 4; i++)
-    str += i ? "." + String(ip[i]) : String(ip[i]);
-  return str;
 }
