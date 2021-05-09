@@ -1,3 +1,6 @@
+
+const unsigned int BAUD_RATE = 9600;
+
 /* Network´s values */
 const char *SSID = "Home";
 const char *PASSWORD = "David1208Helena";
@@ -13,3 +16,6 @@ const unsigned int MAX_SEND_TIME = 300000;
 
 /* CO2 configurations */
 const unsigned int CO2_PIN = 35;
+
+/* BLE mode */
+const unsigned int SCAN_TIME = 5;

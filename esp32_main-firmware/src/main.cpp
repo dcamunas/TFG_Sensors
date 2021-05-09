@@ -1,13 +1,26 @@
 #include <Arduino.h>
-#include <Wire.h>
+//#include <Wire.h>
 #include <WiFi.h>
+#include <esp_wifi.h>
 //#include <SPI.h>
 #include <PubSubClient.h>
-#include <esp_wifi.h>
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEAdvertisedDevice.h>
+#include <BLEScan.h>
+
 #include <definitions.h>
 #include <iWifi.h>
 #include <vector>
 #include <utils.h>
+
+class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
+{
+  void onResult(BLEAdvertisedDevice advertisedDevice)
+  {
+    Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str());
+  }
+};
 
 /* Global variables */
 WiFiClient esp_client;
@@ -16,7 +29,44 @@ iWifi my_wifi(SSID, PASSWORD);
 
 unsigned int old_devices_number = 0;
 unsigned long send_time;
+BLEScan *ble_scan;
 
+void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type);
+void setup_promiscuous_mode();
+void setup_ble();
+void scan_wifi(boolean &send_mqtt);
+void scan_ble(boolean &send_mqtt);
+void reconnect();
+void send_mqtt_data();
+
+void setup()
+{
+  Serial.begin(BAUD_RATE);
+  setup_promiscuous_mode();
+  setup_ble();
+}
+
+void loop()
+{
+  boolean send_mqtt = false;
+
+  scan_wifi(send_mqtt);
+  //scan_ble(send_mqtt);
+
+  Serial.println(send_mqtt);
+
+  if (send_mqtt)
+  {
+    //my_wifi.show_people();
+    send_mqtt_data();
+  }
+  //esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
+  my_wifi.set_channel(my_wifi.get_channel() + 1);
+  delay(SCAN_TIME * 1000);
+}
+
+// ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
 {
@@ -61,14 +111,12 @@ void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
       }
     // If device is new in the room
     if (new_device)
-      my_wifi.get_devices_number() == 0 ? my_wifi.add_device(0, mac_dev, DEFAULT_TTL) : my_wifi.add_device(my_wifi.get_devices_number()-1, mac_dev, DEFAULT_TTL);
+      my_wifi.get_devices_number() == 0 ? my_wifi.add_device(0, mac_dev, DEFAULT_TTL) : my_wifi.add_device(my_wifi.get_devices_number() - 1, mac_dev, DEFAULT_TTL);
   }
 }
-// ------------------------------------------------------------------------------
 
-void setup()
+void setup_promiscuous_mode()
 {
-  Serial.begin(9600);
   wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
   esp_wifi_init(&config);
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
@@ -83,7 +131,24 @@ void setup()
   esp_wifi_set_promiscuous(true);
 }
 
-// ------------------------------------------------------------------------------
+void scan_wifi(boolean &send_mqtt)
+{
+   my_wifi.check_max_channel();
+  esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
+
+  if (my_wifi.get_devices_number() != old_devices_number)
+  {
+    old_devices_number = my_wifi.get_devices_number();
+    send_mqtt = true;
+  }
+
+  /*Para comprobar tiempo utilizar millis()*/
+  if ((millis() - send_time) >= MAX_SEND_TIME)
+    send_mqtt = true;
+
+  my_wifi.purge_devices();
+  //my_wifi.show_people();
+}
 
 void reconnect()
 {
@@ -115,7 +180,7 @@ void send_mqtt_data()
   esp_wifi_set_promiscuous(false);
   my_wifi.connect_wifi();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
-  if(!client.connected())
+  if (!client.connected())
     reconnect();
   client.loop();
 
@@ -134,34 +199,22 @@ void send_mqtt_data()
 
 // ------------------------------------------------------------------------------
 
-void loop()
+void setup_ble()
 {
-  boolean send_mqtt = false;
+  BLEDevice::init("");
+  ble_scan = BLEDevice::getScan(); //create new scan
+  //ble_scan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  ble_scan->setActiveScan(true); //active scan uses more power, but get results faster
+  ble_scan->setInterval(100);
+  ble_scan->setWindow(99);  // less or equal setInterval value
+}
 
-  my_wifi.check_max_channel();
-  esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
-
-  //delay(5000);
-
-  if (my_wifi.get_devices_number() != old_devices_number)
-  {
-    old_devices_number = my_wifi.get_devices_number();
-    send_mqtt = true;
-  }
-
-  /*Para comprobar tiempo utilizar millis()*/
-  if ((millis() - send_time) >= MAX_SEND_TIME)
-    send_mqtt = true;
-
-  my_wifi.purge_devices();
-  my_wifi.show_people();
-
-  if (send_mqtt)
-  {
-    //delay(5000);
-    send_mqtt_data();
-  }
-  //esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
-  my_wifi.set_channel(my_wifi.get_channel() + 1);
-  delay(2500);
+void scan_ble(boolean &send_mqtt)
+{
+  BLEScanResults foundDevices = ble_scan->start(SCAN_TIME, false);
+  Serial.print("Devices found: ");
+  Serial.println(foundDevices.getCount());
+  Serial.println("Scan done!");
+  ble_scan->clearResults();   // delete results fromBLEScan buffer to release memory
+  delay(2000);
 }
