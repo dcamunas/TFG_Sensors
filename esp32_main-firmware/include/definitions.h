@@ -6,7 +6,7 @@ const char *SSID = "Home";
 const char *PASSWORD = "David1208Helena";
 const char *MQTT_SERVER_NUC = "192.168.1.141";
 const char *MQTT_SERVER_VM = "192.168.1.159";
-unsigned int MOSQUITTO_PORT = 1883;
+const unsigned int MOSQUITTO_PORT = 1883;
 
 /* Promiscuous mode */
 const unsigned int OFFLINE = 0;
