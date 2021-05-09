@@ -7,7 +7,7 @@ private:
     const char *_ssid;
     const char *_password;
 
-    String format_mac(IPAddress ip);
+    String _format_mac(IPAddress ip);
 
 public:
     iWifi(const char *ssid, const char *password);
@@ -36,10 +36,10 @@ void iWifi::connect_wifi()
         Serial.print(".");
     }
 
-    Serial.println("\n[X] Connected to " + String(_ssid) + " as: " + format_mac(WiFi.localIP()));
+    Serial.println("\n[X] Connected to " + String(_ssid) + " as: " + _format_mac(WiFi.localIP()));
 }
 
-String iWifi::format_mac(IPAddress ip)
+String iWifi::_format_mac(IPAddress ip)
 {
     String str = "";
     unsigned int i;

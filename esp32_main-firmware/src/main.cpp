@@ -1,19 +1,28 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+
+
 #include <definitions.h>
-#include<iWifi.h>
-#include <iBle.h>
+#include <utils.h>
+#include <iWifi.h>
 
 
 /* Global variables */
 WiFiClient esp_client;
 PubSubClient client(esp_client);
 iWifi my_wifi(SSID, PASSWORD);
-iBle my_ble;
+BLEScan *ble_scan;
 
-unsigned long send_time;
+unsigned long send_time;    
+unsigned int devices_number;
+
 
 void reconnect();
+void setup_ble();
+void scan_ble(boolean &send_mqtt);
 void send_mqtt_data();
 
 
@@ -21,7 +30,7 @@ void setup()
 {
   Serial.begin(BAUD_RATE);
   my_wifi.connect_wifi();
-  my_ble.setup_ble();
+  setup_ble();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
 }
 
@@ -29,7 +38,7 @@ void loop()
 {
   boolean send_mqtt = true;
 
-  my_ble.scan_ble(send_mqtt);
+  scan_ble(send_mqtt);
 
   if (send_mqtt)
   {
@@ -71,7 +80,7 @@ void send_mqtt_data()
     reconnect();
   client.loop();
 
-  msg = String(my_ble.get_devices_number());
+  msg = String(devices_number);
   if (client.publish("test", msg.c_str()))
     Serial.println("Succesfully published.\n");
   else
@@ -80,4 +89,24 @@ void send_mqtt_data()
   client.disconnect();
 
   send_time = millis();
+}
+
+void setup_ble()
+{
+    BLEDevice::init("");
+    ble_scan = BLEDevice::getScan(); //create new scan
+    ble_scan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    ble_scan->setActiveScan(true); //active scan uses more power, but get results faster
+    ble_scan->setInterval(100);
+    ble_scan->setWindow(99); // less or equal setInterval value
+}
+
+void scan_ble(boolean &send_mqtt)
+{
+    BLEScanResults found_devices = ble_scan->start(SCAN_TIME, false);
+    devices_number = found_devices.getCount();
+    Serial.println(devices_number);
+    Serial.println("Scan done!");
+    ble_scan->setActiveScan(false);
+    ble_scan->clearResults(); // delete results fromBLEScan buffer to release memory
 }

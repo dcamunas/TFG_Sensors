@@ -18,4 +18,4 @@ const char *MQTT_SERVER_VM = "192.168.1.159";
 #define CO2_PIN 35
 
 /* BLE mode */
-//#define SCAN_TIME 5
+#define SCAN_TIME 5
