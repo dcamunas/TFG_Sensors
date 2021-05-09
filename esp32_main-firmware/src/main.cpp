@@ -23,6 +23,7 @@ PubSubClient client(esp_client);
 BLEScan *ble_scan;
 
 unsigned long send_time;
+unsigned int devs_count = 0;
 
 void connect_wifi();
 void reconnect();
@@ -34,12 +35,14 @@ String format_mac(IPAddress ip);
 void setup()
 {
   Serial.begin(BAUD_RATE);
+  connect_wifi();
   setup_ble();
+  client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
 }
 
 void loop()
 {
-  boolean send_mqtt = false;
+  boolean send_mqtt = true;
 
   scan_ble(send_mqtt);
 
@@ -48,7 +51,7 @@ void loop()
     //my_wifi.show_people();
     send_mqtt_data();
   }
-  delay(SCAN_TIME * 1000);
+  //delay(SCAN_TIME * 1000);
 }
 
 // ------------------------------------------------------------------------------
@@ -80,13 +83,11 @@ void send_mqtt_data()
 {
   String msg;
   /* Setup MQTT */
-  connect_wifi();
-  client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
   if (!client.connected())
     reconnect();
   client.loop();
 
-  msg = String("concentration, location=us, ppm=1");
+  msg = String(devs_count);
   if (client.publish("test", msg.c_str()))
     Serial.println("Succesfully published.\n");
   else
@@ -112,8 +113,10 @@ void setup_ble()
 void scan_ble(boolean &send_mqtt)
 {
   BLEScanResults found_devices = ble_scan->start(SCAN_TIME, false);
-  Serial.println(found_devices.getCount());
+  devs_count = found_devices.getCount();
+  Serial.println(devs_count);
   Serial.println("Scan done!");
+  ble_scan->setActiveScan(false);
   ble_scan->clearResults(); // delete results fromBLEScan buffer to release memory
   delay(2000);
 }
