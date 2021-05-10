@@ -1,7 +1,4 @@
-#include <Arduino.h>
 #include <iWifi.h>
-#include <ESP8266WiFi.h>
-#include <Wire.h>
 #include <vector>
 
 /* Class constructor */
@@ -9,7 +6,7 @@ iWifi::iWifi(const char *ssid, const char *password)
 {
   _ssid = ssid;
   _password = password;
-  _current_channel = FIRST_CHANNEL;
+  _current_channel = 1;
 }
 
 /* Class destructor */

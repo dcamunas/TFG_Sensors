@@ -10,7 +10,7 @@ const char *MQTT_SERVER_VM = "192.168.1.159";
 
 /* Promiscuous mode */
 #define OFFLINE 0
-#define ONLINE  1
+#define ONLINE 1
 #define LAST_CHANNEL 13
 #define MAX_SEND_TIME 300000
 
