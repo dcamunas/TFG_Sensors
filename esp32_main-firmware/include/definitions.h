@@ -19,3 +19,7 @@ const char *MQTT_SERVER_VM = "192.168.1.159";
 
 /* BLE mode */
 #define SCAN_TIME 5
+
+/* MQTT Topics */
+String NODE_ID = "node_1";
+String env_topic = "IOT/" + NODE_ID + "environment"

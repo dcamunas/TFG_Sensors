@@ -7,6 +7,7 @@
 
 #include <definitions.h>
 #include <iWifi.h>
+#include <iNdir.h>
 #include <utils.h>
 
 
@@ -15,41 +16,43 @@ WiFiClient esp_client;
 PubSubClient client(esp_client);
 iWifi my_wifi(SSID, PASSWORD);
 BLEScan *ble_scan;
+iNdir my_ndir;
 
-unsigned int ble_devices_number = 0, ble_old_devices_number = 0, wifi_old_devices_number = 0;
-unsigned long send_time;
+unsigned int ble_devs_count;
 
 void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type);
 void reconnect();
 void setup_ble();
 void setup_promiscuous_mode();
-void scan_wifi(boolean &send_mqtt);
-void scan_ble(boolean &send_mqtt);
+void scan_wifi();
+void scan_ble();
 void send_mqtt_data();
 
 void setup()
 {
+  ble_devs_count = 0;
   Serial.begin(BAUD_RATE);
   my_wifi.connect_wifi();
   setup_ble();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
   setup_promiscuous_mode();
+  pinMode(CO2_PIN, INPUT);
 }
 
 void loop()
 {
-  boolean send_mqtt = false;
+  boolean send_wifi_devs, send_ble_devs, send_co2;
+  send_wifi_devs = send_ble_devs = send_co2 = false;
 
-  scan_wifi(send_mqtt);
-  scan_ble(send_mqtt);
-
-  if (send_mqtt)
-  {
-    send_mqtt_data();
-  }
+  scan_wifi();
+  scan_ble();
+  my_ndir.read_value(analogRead(CO2_PIN));
+  Serial.println("CO2 Level: " + String(my_ndir.get_co2_value()));
+  send_mqtt_data();
+  
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
   my_wifi.set_channel(my_wifi.get_channel() + 1);
-  delay(SCAN_TIME * 1000);
+  delay(SCAN_TIME * 2000);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -114,20 +117,21 @@ void setup_promiscuous_mode()
   esp_wifi_set_promiscuous(true);
 }
 
-void scan_wifi(boolean &send_mqtt)
+void scan_wifi()
 {
    my_wifi.check_max_channel();
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
 
-  if (my_wifi.get_devices_number() != wifi_old_devices_number)
+  /*if (my_wifi.get_devices_number() != wifi_old_devices_number)
   {
     wifi_old_devices_number = my_wifi.get_devices_number();
     send_mqtt = true;
   }
 
-  /*Para comprobar tiempo utilizar millis()*/
+  // Para comprobar tiempo utilizar millis()
   if ((millis() - send_time) >= MAX_SEND_TIME)
     send_mqtt = true;
+  */
 
   my_wifi.purge_devices();
 }
@@ -154,23 +158,20 @@ void reconnect()
 
 void send_mqtt_data()
 {
-  String msg;
   esp_wifi_set_promiscuous(false);
 
   if (!client.connected())
     reconnect();
   client.loop();
-
-  //msg = String("concentration, location=us, ppm=1");
-  msg = "Wifi: " + String(wifi_old_devices_number) + "BLE: " + String(ble_devices_number);
-  if (client.publish("test", msg.c_str()))
+  
+  if (client.publish(env_topic.c_str(), line_protocol_room(ble_devs_count, my_wifi.get_devices_number(), my_ndir.get_co2_value()).c_str()))
     Serial.println("Succesfully published.\n");
   else
     Serial.println("\nMessage not published\n");
 
   client.disconnect();
 
-  send_time = millis();
+  //send_time = millis();
   esp_wifi_set_promiscuous(true);
 }
 
@@ -187,7 +188,7 @@ void setup_ble()
 void scan_ble(boolean &send_mqtt)
 {
     BLEScanResults found_devices = ble_scan->start(SCAN_TIME, false);
-    ble_devices_number = found_devices.getCount();
+    ble_devs_count = found_devices.getCount();
     ble_scan->setActiveScan(false);
     ble_scan->clearResults();
 }
