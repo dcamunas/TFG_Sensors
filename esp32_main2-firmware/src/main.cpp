@@ -40,10 +40,10 @@ void loop()
 
   scan_ble(send_mqtt);
 
-  if (send_mqtt)
+  /*if (send_mqtt)
   {
     send_mqtt_data();
-  }
+  }*/
   //delay(SCAN_TIME * 1000);
 }
 
