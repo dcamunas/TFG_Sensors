@@ -1,14 +1,13 @@
 #include <Arduino.h>
 
-#define PIN_CO2 34
+#define CO2_PIN 35
 
-const unsigned int co2_pin = 35;
 
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  pinMode(co2_pin, INPUT);
+  pinMode(CO2_PIN, INPUT);
 
   // Set the default voltage of the reference voltage
   //analogReadResolution(DEFAULT);
@@ -18,7 +17,7 @@ void setup()
 void loop()
 {
   // Read voltage
-  int sensor_value = analogRead(co2_pin);
+  int sensor_value = analogRead(CO2_PIN);
   Serial.println(sensor_value);
 
   // The analog signal is converted to a voltage
@@ -42,5 +41,5 @@ void loop()
     Serial.println("[X] Voltage: " + String(voltage) + " mv  ||  Concentration: " + String(concentration) + " ppm.");
  
   }
-  delay(2000);
+  delay(15000);
 }

@@ -1,4 +1,5 @@
 #include <iWifi.h>
+#include <WiFi.h>
 #include <vector>
 
 /* Class constructor */

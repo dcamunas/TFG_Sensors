@@ -1,12 +1,13 @@
+#include <Arduino.h>
 
 #define BAUD_RATE 9600
 
 /* Network´s values */
 #define MOSQUITTO_PORT 1883
 const char *SSID = "Home";
-const char *PASSWORD = "2+5+26+28=cumple";
+const char *PASSWORD = "2+5+26+28=cumples";
 const char *MQTT_SERVER_NUC = "192.168.1.141";
-const char *MQTT_SERVER_VM = "192.168.1.159";
+const char *MQTT_SERVER_VM = "192.168.1.175";
 
 /* Promiscuous mode */
 #define OFFLINE 0
@@ -18,8 +19,8 @@ const char *MQTT_SERVER_VM = "192.168.1.159";
 #define CO2_PIN 35
 
 /* BLE mode */
-#define SCAN_TIME 5
+#define SCAN_TIME 10
 
 /* MQTT Topics */
-String NODE_ID = "node_1";
-String env_topic = "IOT/" + NODE_ID + "environment"
+String NODE_ID = "2";
+String env_topic = "NODE/" + NODE_ID + "/environment";

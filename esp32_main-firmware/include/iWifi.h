@@ -1,21 +1,21 @@
 #include <Arduino.h>
-#include <WiFi.h>
 #include <vector>
 
 #define MAX_CHANNEL     13 //max Channel -> US = 11, EU = 13, Japan = 14
 #define DEFAULT_TTL     24
 #define FIRST_CHANNEL   1
 
-struct device
-{
-  unsigned int id;
-  String mac;
-  int ttl;
-};
 
 class iWifi
 {
 private:
+    struct device
+    {
+    unsigned int id;
+    String mac;
+    int ttl;
+    };
+
   const char *_ssid;
   const char *_password;
   unsigned int _current_channel;

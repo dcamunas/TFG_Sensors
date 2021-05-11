@@ -4,7 +4,8 @@
 #include <BLEUtils.h>
 #include <BLEScan.h>
 #include <vector>
-
+#include <WiFi.h>
+#include <esp_wifi.h>
 #include <definitions.h>
 #include <iWifi.h>
 #include <iNdir.h>
@@ -52,7 +53,7 @@ void loop()
   
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
   my_wifi.set_channel(my_wifi.get_channel() + 1);
-  delay(SCAN_TIME * 2000);
+  delay(SCAN_TIME * 1000);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -156,6 +157,24 @@ void reconnect()
   }
 }
 
+void setup_ble()
+{
+    BLEDevice::init("");
+    ble_scan = BLEDevice::getScan();
+    ble_scan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+    ble_scan->setActiveScan(true);
+    ble_scan->setInterval(100);
+    ble_scan->setWindow(99);
+}
+
+void scan_ble()
+{
+    BLEScanResults found_devices = ble_scan->start(SCAN_TIME, false);
+    ble_devs_count = found_devices.getCount();
+    ble_scan->setActiveScan(false);
+    ble_scan->clearResults();
+}
+
 void send_mqtt_data()
 {
   esp_wifi_set_promiscuous(false);
@@ -173,22 +192,4 @@ void send_mqtt_data()
 
   //send_time = millis();
   esp_wifi_set_promiscuous(true);
-}
-
-void setup_ble()
-{
-    BLEDevice::init("");
-    ble_scan = BLEDevice::getScan();
-    ble_scan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-    ble_scan->setActiveScan(true);
-    ble_scan->setInterval(100);
-    ble_scan->setWindow(99);
-}
-
-void scan_ble(boolean &send_mqtt)
-{
-    BLEScanResults found_devices = ble_scan->start(SCAN_TIME, false);
-    ble_devs_count = found_devices.getCount();
-    ble_scan->setActiveScan(false);
-    ble_scan->clearResults();
 }

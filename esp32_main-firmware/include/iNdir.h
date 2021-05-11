@@ -1,4 +1,3 @@
-
 #define MAX_VOLTAGE 400
 #define MIN_VOLTAGE 0
 
