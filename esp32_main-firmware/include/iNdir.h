@@ -11,5 +11,5 @@ public:
     iNdir();
     ~iNdir();
     void read_value(int sensor_value);
-    int get_co2_value();
+    float get_co2_value();
 };

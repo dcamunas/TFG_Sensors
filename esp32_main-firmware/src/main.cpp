@@ -19,20 +19,28 @@ iWifi my_wifi(SSID, PASSWORD);
 BLEScan *ble_scan;
 iNdir my_ndir;
 
-unsigned int ble_devs_count;
+unsigned int ble_devs_count, old_ble_devs_count, old_wifi_devs_count;
+float old_co2_value;
+unsigned long send_time; 
 
 void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type);
 void reconnect();
 void setup_ble();
 void setup_promiscuous_mode();
-void scan_wifi();
-void scan_ble();
+void scan_wifi(boolean &send_mqtt);
+void scan_ble(boolean &send_mqtt);
 void send_mqtt_data();
+boolean check_send_time();
+boolean check_co2_level();
 
 void setup()
 {
-  ble_devs_count = 0;
+  ble_devs_count = old_ble_devs_count = old_wifi_devs_count = 0;
+  send_time = 0;
+  old_co2_value = 0.00;
+
   Serial.begin(BAUD_RATE);
+
   my_wifi.connect_wifi();
   setup_ble();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
@@ -42,18 +50,21 @@ void setup()
 
 void loop()
 {
-  boolean send_wifi_devs, send_ble_devs, send_co2;
-  send_wifi_devs = send_ble_devs = send_co2 = false;
+  boolean send_mqtt = false;
 
-  scan_wifi();
-  scan_ble();
+  scan_wifi(send_mqtt);
+  scan_ble(send_mqtt);
   my_ndir.read_value(analogRead(CO2_PIN));
-  Serial.println("CO2 Level: " + String(my_ndir.get_co2_value()));
-  send_mqtt_data();
+  send_mqtt += check_co2_level() + check_send_time();
   
+  //if(send_mqtt)
+  //  send_mqtt_data();
+  my_wifi.show_devices();
+
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
   my_wifi.set_channel(my_wifi.get_channel() + 1);
-  delay(SCAN_TIME * 1000);
+
+  //delay(SCAN_TIME * 1000);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -87,9 +98,10 @@ void sniffer(void *buffer, wifi_promiscuous_pkt_type_t packet_type)
     This removes the 'nibble' bits from the stat and end of the data we want. 
     So we only get the mac address.
     */
-  for (i = 4; i < 16; i++)
-    mac_dev += packet[i];
+  for (i = 4; i <= 15; i++)
+      mac_dev += packet[i];
   //mac_dev.toUpperCase();
+
 
   if (!my_wifi.is_know_device(mac_dev))
   {
@@ -118,23 +130,17 @@ void setup_promiscuous_mode()
   esp_wifi_set_promiscuous(true);
 }
 
-void scan_wifi()
+void scan_wifi(boolean &send_mqtt)
 {
-   my_wifi.check_max_channel();
+  my_wifi.purge_devices();
+  my_wifi.check_max_channel();
   esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
 
-  /*if (my_wifi.get_devices_number() != wifi_old_devices_number)
+  if (my_wifi.get_devices_number() != old_wifi_devs_count)
   {
-    wifi_old_devices_number = my_wifi.get_devices_number();
-    send_mqtt = true;
+    old_wifi_devs_count = my_wifi.get_devices_number();
+    send_mqtt += true;
   }
-
-  // Para comprobar tiempo utilizar millis()
-  if ((millis() - send_time) >= MAX_SEND_TIME)
-    send_mqtt = true;
-  */
-
-  my_wifi.purge_devices();
 }
 
 void reconnect()
@@ -167,12 +173,18 @@ void setup_ble()
     ble_scan->setWindow(99);
 }
 
-void scan_ble()
+void scan_ble(boolean &send_mqtt)
 {
     BLEScanResults found_devices = ble_scan->start(SCAN_TIME, false);
     ble_devs_count = found_devices.getCount();
     ble_scan->setActiveScan(false);
     ble_scan->clearResults();
+
+    if(ble_devs_count != old_ble_devs_count)
+    {
+      old_ble_devs_count = ble_devs_count;
+      send_mqtt += true;
+    }
 }
 
 void send_mqtt_data()
@@ -190,6 +202,21 @@ void send_mqtt_data()
 
   client.disconnect();
 
-  //send_time = millis();
+  send_time = millis();
   esp_wifi_set_promiscuous(true);
+}
+
+boolean check_send_time()
+{
+  return (millis() - send_time) >= MAX_SEND_TIME;
+}
+
+boolean check_co2_level()
+{
+  if (my_ndir.get_co2_value() != old_co2_value)
+  {
+    old_co2_value = my_ndir.get_co2_value();
+    return true;
+  }
+  return false;
 }

@@ -26,7 +26,7 @@ void iWifi::set_dev_ttl(unsigned int index){_devices_list.at(index).ttl = DEFAUL
 void iWifi::connect_wifi()
 {
   delay(250);
-  Serial.println("[X] Connecting to " + String(_ssid));
+  Serial.print("[X] Connecting to " + String(_ssid));
   WiFi.mode(WIFI_STA);
   WiFi.begin(_ssid, _password);
 
@@ -48,7 +48,7 @@ String iWifi::format_mac(IPAddress ip)
   return str;
 }
 
-void iWifi::show_people()
+void iWifi::show_devices()
 {
   for (int i = 0; i < _devices_list.size(); i++)
   {
@@ -67,7 +67,7 @@ boolean iWifi::is_know_device(String mac_dev)
 {
   for (unsigned int i = 0; i < know_devices.size(); i++)
   {
-    if (mac_dev == know_devices.at(i))
+    if (check_equals_macs(mac_dev, know_devices.at(i)))
       return true;
   }
   return false;
@@ -81,7 +81,7 @@ void iWifi::check_max_channel()
 
 void iWifi::add_device(unsigned int id, String mac, int ttl){_devices_list.push_back({id, mac, ttl});}
 
-void iWifi::purge_devices()
+/*void iWifi::purge_devices()
 {
   for (unsigned int i = 0; i < _devices_list.size(); i++)
   {
@@ -90,10 +90,17 @@ void iWifi::purge_devices()
     if (_devices_list[i].ttl <= 0)
       _devices_list.erase(_devices_list.begin() + i);
   }
-}
+}*/
+
+void iWifi::purge_devices(){_devices_list.clear();}
 
 /* Checking of there are device in the room */
 boolean iWifi::there_are_dev(int length)
 {
   return !(length < 0);
+}
+
+boolean iWifi::check_equals_macs(std::string, std::string mac2)
+{
+  return true;
 }

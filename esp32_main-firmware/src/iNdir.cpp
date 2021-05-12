@@ -3,7 +3,7 @@
 
 iNdir::iNdir() {}
 iNdir::~iNdir() {}
-int iNdir::get_co2_value() { return _concentration; }
+float iNdir::get_co2_value() { return _concentration; }
 
 void iNdir::read_value(int sensor_value)
 {
