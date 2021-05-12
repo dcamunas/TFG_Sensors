@@ -1,30 +1,25 @@
 #include <Arduino.h>
 #include <vector>
-#include <string>
 
-#define MAX_CHANNEL     13 //max Channel -> US = 11, EU = 13, Japan = 14
-#define DEFAULT_TTL     24
-#define FIRST_CHANNEL   1
-
+#define MAX_CHANNEL 13 //max Channel -> US = 11, EU = 13, Japan = 14
+#define DEFAULT_TTL 24
+#define FIRST_CHANNEL 1
 
 class iWifi
 {
 private:
-    struct device
-    {
+  struct device
+  {
     unsigned int id;
     String mac;
     int ttl;
-    };
+  };
 
   const char *_ssid;
   const char *_password;
   unsigned int _current_channel;
   std::vector<device> _devices_list;
-
-
-public:
-  std::vector<std::string> know_devices = {
+  std::vector<String> know_devices = {
       "ac18262dfe49",
       "02404b44519b",
       "982cbce84e37",
@@ -35,13 +30,15 @@ public:
       "0e89055493b0",
       "9c9c1fcb0624",
       "9c9c1fca7c64",
-      "48bf6bdbace2", 
+      "48bf6bdbace2",
       "dc91bf997e00",
       "88cb87ee6957",
       "000c2962aebe",
-      "4cbb5859898a"
+      "4cbb5859898a",
+      "38bc1b93a2c0"
     };
 
+public:
   iWifi(const char *ssid, const char *password);
   ~iWifi();
   void set_channel(unsigned channel_to_change);
@@ -58,5 +55,5 @@ public:
   void show_devices();
   boolean is_know_device(String mac_dev);
   String format_mac(IPAddress ip);
-  boolean check_equals_macs(std::string mac1, std::string mac2);
+  boolean check_equals_macs(String mac1, String mac2);
 };

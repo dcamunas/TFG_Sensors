@@ -22,5 +22,8 @@ const char *MQTT_SERVER_VM = "192.168.1.175";
 #define SCAN_TIME 10
 
 /* MQTT Topics */
-String NODE_ID = "2";
+#define ACTIVATE    1
+#define DESACTIVATE 0
+String NODE_ID = "1";
 String env_topic = "NODE/" + NODE_ID + "/environment";
+String recv_topic = "NODE/" + NODE_ID + "/activation";

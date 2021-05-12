@@ -65,12 +65,12 @@ void iWifi::show_devices()
 
 boolean iWifi::is_know_device(String mac_dev)
 {
-  for (unsigned int i = 0; i < know_devices.size(); i++)
+  boolean is_know = false;
+  for (unsigned int i = 0; i < know_devices.size() && !is_know; i++)
   {
-    if (check_equals_macs(mac_dev, know_devices.at(i)))
-      return true;
+    is_know = check_equals_macs(mac_dev, know_devices.at(i));
   }
-  return false;
+  return is_know;
 }
 
 void iWifi::check_max_channel()
@@ -100,7 +100,10 @@ boolean iWifi::there_are_dev(int length)
   return !(length < 0);
 }
 
-boolean iWifi::check_equals_macs(std::string, std::string mac2)
+boolean iWifi::check_equals_macs(String mac1, String mac2)
 {
-  return true;
+  mac1 = mac1.substring(5, 5+5);
+  mac2 = mac2.substring(mac2.indexOf(mac1), mac2.indexOf(mac1)+5);
+
+  return mac1 == mac2;
 }
