@@ -22,8 +22,12 @@ void setup()
 void loop() 
 {
   int digit_sensor_value = digitalRead(DIGIT_PIR_PIN);
-  Serial.println("VAL: " + digit_sensor_value);
-  //Serial.println("ANALOG VALUE: " + analogRead(ANALOG_PIR_PIN));
+  if( digit_sensor_value == HIGH)
+    Serial.println("HIGHT");
+  else if (digit_sensor_value == LOW)
+    Serial.println("LOW");
+    
+  //Serial.println(analogRead(ANALOG_PIR_PIN));
 
-  delay(2500);
+  delay(1000);
 }

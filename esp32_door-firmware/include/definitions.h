@@ -12,8 +12,8 @@ const char *MQTT_SERVER_VM = "192.168.1.175";
 #define MAX_SEND_TIME 300000
 
 /* PIR values */
-#define DIGIT_PIR_PIN 34
-#define ANALOG_PIR_PIN 35
+#define PIR1_PIN 4
+#define PIR2_PIN 15
 
 
 /* MQTT Topics */
