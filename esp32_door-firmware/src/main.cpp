@@ -63,9 +63,9 @@ void reconnect()
   }
 }
 
-esp_sleep_enable_ext1_wakeup(ESP_EXT1_WAKEUP_ALL_LOW);
+//esp_sleep_enable_ext1_wakeup(ESP_EXT1_WAKEUP_ALL_LOW);
 
-void IRAM_ATTR notify_main()
+/*void IRAM_ATTR notify_main()
 {
   client.publish()
-}
+}*/
