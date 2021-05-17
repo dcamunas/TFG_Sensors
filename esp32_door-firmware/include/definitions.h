@@ -7,7 +7,7 @@
 const char *SSID = "Home";
 const char *PASSWORD = "2+5+26+28=cumples";
 const char *MQTT_SERVER_NUC = "192.168.1.141";
-const char *MQTT_SERVER_VM = "192.168.1.179";
+const char *MQTT_SERVER_VM = "192.168.1.175";
 
 #define MAX_SEND_TIME 300000
 
@@ -17,8 +17,15 @@ const char *MQTT_SERVER_VM = "192.168.1.179";
 
 
 /* MQTT Topics */
-#define ACTIVATE    1
-#define DESACTIVATE 0
+String ACTIVATE = "1";
+String DESACTIVATE = "0";
 String NODE_ID = "1";
 String actv_topic = "NODE/" + NODE_ID + "/activation";
-String env_topic = "NODE/" + NODE_ID + "/persons_counter"
+String env_topic = "NODE/" + NODE_ID + "/people_counter";
+
+
+
+String line_protocol_counter(unsigned int counter)
+{
+    return String(counter);
+}
