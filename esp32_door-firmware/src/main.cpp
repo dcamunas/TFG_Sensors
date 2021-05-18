@@ -34,7 +34,9 @@ void counter_people()
   case HIGH:
     if(!s1_detected)
       s1_detected = true;
-      
+    else
+      if(s2_detected)
+        people_counter > 0 ? people_counter-- : people_counter = 0;
     break;
   // LOW
   default:
@@ -59,7 +61,7 @@ void counter_people()
 
   if(s1_detected == true && s2_detected == true)
   {
-    delay(1000);
+    //delay(1000);
     s1_detected = s2_detected = false;
   }
 }
@@ -67,8 +69,6 @@ void counter_people()
 
 void loop() 
 {  
-  people_counter = 0;
-
   s1_value = digitalRead(PIR1_PIN);
   delay(250);
   s2_value = digitalRead(PIR2_PIN);
