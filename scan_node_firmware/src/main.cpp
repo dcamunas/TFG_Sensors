@@ -57,11 +57,12 @@ void loop()
     my_ndir.read_value(analogRead(CO2_PIN));
     send_mqtt += check_co2_level() + check_send_time();
 
-    if (send_mqtt)
+    //if (send_mqtt)
       send_mqtt_data();
 
     esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
     my_wifi.set_channel(my_wifi.get_channel() + 1);
+    delay(5000);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
