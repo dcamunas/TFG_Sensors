@@ -31,7 +31,6 @@ void scan_ble(boolean &send_mqtt);
 void send_mqtt_data();
 boolean check_send_time();
 boolean check_co2_level();
-boolean check_activation();
 
 void setup()
 {
@@ -45,14 +44,12 @@ void setup()
   setup_ble();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
   setup_promiscuous_mode();
+
   pinMode(CO2_PIN, INPUT);
 }
 
 void loop()
 {
-  //while (client.subscribe(recv_topic.c_str()) == ACTIVATE)
-  //{
-
     boolean send_mqtt = false;
 
     scan_wifi(send_mqtt);
@@ -65,7 +62,6 @@ void loop()
 
     esp_wifi_set_channel(my_wifi.get_channel(), WIFI_SECOND_CHAN_NONE);
     my_wifi.set_channel(my_wifi.get_channel() + 1);
-  //}
 }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -147,17 +143,12 @@ void reconnect()
 {
   while (!client.connected())
   {
-    Serial.print("Attempting MQTT connection... ");
-    if (client.connect("esp32_main-client1"))
-    {
-      Serial.println("connected");
-    }
-    else
+    if (!client.connect("esp32_main"))
     {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
-      delay(2500);
+      delay(2500);    
     }
     yield();
   }
@@ -195,11 +186,8 @@ void send_mqtt_data()
     reconnect();
   client.loop();
 
-  if (client.publish(env_topic.c_str(), line_protocol_room(ble_devs_count, my_wifi.get_devices_number(), my_ndir.get_co2_value()).c_str()))
-    Serial.println("Succesfully published.\n");
-  else
-    Serial.println("\nMessage not published\n");
-
+  client.publish(scan_topic.c_str(), line_protocol(ble_devs_count, my_wifi.get_devices_number(), my_ndir.get_co2_value()).c_str());
+  
   client.disconnect();
 
   send_time = millis();

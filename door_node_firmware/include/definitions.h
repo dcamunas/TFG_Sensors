@@ -17,11 +17,11 @@ const char *MQTT_SERVER_VM = "192.168.1.175";
 
 
 /* MQTT Topics */
-String ACTIVATE = "1";
-String DESACTIVATE = "0";
+//String ACTIVATE = "1";
+//String DESACTIVATE = "0";
 String NODE_ID = "1";
-String actv_topic = "NODE/" + NODE_ID + "/activation";
-String env_topic = "NODE/" + NODE_ID + "/people_counter";
+//String actv_topic = "NODE/" + NODE_ID + "/activation";
+String count_topic = "NODE/" + NODE_ID + "/people_counter";
 
 
 

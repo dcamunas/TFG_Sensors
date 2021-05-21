@@ -41,7 +41,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 
 /* Line protocol format */
 
-String line_protocol_room(unsigned int ble_count, unsigned int wifi_count, float co2_level)
+String line_protocol(unsigned int ble_count, unsigned int wifi_count, float co2_level)
 {
-  return "environment,location=us-midwest ble_count=" + String(ble_count) + " wifi_count=" + String(wifi_count) + " co2_level=" + String(co2_level);
+  return "[" + String(ble_count) + "," + String(wifi_count) + "," + String(co2_level) + "]";
 }
