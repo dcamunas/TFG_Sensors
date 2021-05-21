@@ -14,7 +14,7 @@ iWifi my_wifi(SSID, PASSWORD);
 std::vector<std::string> mqtt_data;
 
 
-void string_tokenizer(std::string line)
+void string_tokenizer(std::vector<std::string> mqtt_data, std::string line)
 {  
     // Vector of string to save tokens 
     std::vector <std::string> words_vector; 
@@ -30,7 +30,7 @@ void reconnect();
 void callback(char *topic, byte *payload, size_t length)
 {
   std::string s_payload(reinterpret_cast <const char *>(payload), length);
-  string_tokenizer(s_payload);
+  string_tokenizer(s_payload, mqtt_data);
 }
 
 void setup()

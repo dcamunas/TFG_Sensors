@@ -7,6 +7,8 @@
 WiFiClient esp_client;
 PubSubClient client(esp_client);
 iWifi my_wifi(SSID, PASSWORD);
+std::vector<std::string> mqtt_data;
+
 
 int people_counter, old_people_counter;
 unsigned int s1_value, s2_value;
@@ -28,14 +30,16 @@ void setup()
 
   my_wifi.connect();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
+  client.setCallback(callback);
+  if (!client.connected())
+    reconnect();
+  client.subscribe(scan_topic.c_str());
 }
 
 void send_mqtt_data()
 {
-  if (!client.connected())
-    reconnect();
   client.loop();
-  client.publish(count_topic.c_str(), line_protocol_counter(people_counter).c_str());
+  client.publish(env_topic.c_str(), line_protocol(mqtt_data[BLE_INDEX], mqtt_data[WIFI_INDEX], mqtt_data[CO2_INDEX], mqtt_data[PEOPLE_INDEX]).c_str());
   client.disconnect();
 }
 
@@ -56,7 +60,7 @@ void loop()
   s1_value = digitalRead(PIR1_PIN);
 
   counter_people();
-  //if(more_people())
+  if(more_people())
     send_mqtt_data();
 
   delay(250);
@@ -75,6 +79,12 @@ void reconnect()
     }
     yield();
   }
+}
+
+void callback(char *topic, byte *payload, size_t length)
+{
+  std::string s_payload(reinterpret_cast <const char *>(payload), length);
+  string_tokenizer(mqtt_data, s_payload);
 }
 
 void counter_people()

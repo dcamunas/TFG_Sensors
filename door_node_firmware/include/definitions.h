@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include <vector>
+#include <sstream>
+#include <string>
 
 #define BAUD_RATE 115200
 
@@ -17,15 +20,29 @@ const char *MQTT_SERVER_VM = "192.168.1.175";
 
 
 /* MQTT Topics */
-//String ACTIVATE = "1";
-//String DESACTIVATE = "0";
+#define BLE_INDEX       0
+#define WIFI_INDEX      1
+#define CO2_INDEX       2
+#define PEOPLE_INDEX    4
+
 String NODE_ID = "1";
-//String actv_topic = "NODE/" + NODE_ID + "/activation";
-String count_topic = "NODE/" + NODE_ID + "/people_counter";
+String scan_topic = "node/" + NODE_ID + "/scan";
+String env_topic = "node/" + NODE_ID + "/environment";
 
 
+void string_tokenizer(std::vector<std::string> mqtt_data, std::string line)
+{  
+    // Vector of string to save tokens 
+    std::vector <std::string> words_vector; 
+    std::stringstream check(line);  
+    std::string word; 
+      
+    while(getline(check, word, ',')) 
+        mqtt_data.push_back(word); 
+}
 
-String line_protocol_counter(unsigned int counter)
+/* Line protocol format */
+std::string line_protocol(std::string ble_count, std::string wifi_count, std::string co2_level, std::string people_count)
 {
-    return String(counter);
+  return "environment,location=us-midwest ble_count=" + ble_count + " wifi_count=" + wifi_count + " co2_level=" + co2_level + " people_count=" + people_count;
 }
