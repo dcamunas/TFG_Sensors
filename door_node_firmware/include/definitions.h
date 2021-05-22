@@ -1,7 +1,5 @@
 #include <Arduino.h>
 #include <vector>
-#include <sstream>
-#include <string>
 
 #define BAUD_RATE 9600
 
@@ -31,20 +29,12 @@ String env_topic = "node/" + NODE_ID + "/environment";
 
 
 #define SEPARATOR ','
+#define EMPTY      0
 
-void string_tokenizer(std::vector<std::string> mqtt_data, std::string line)
-{  
-    // Vector of string to save tokens 
-    std::vector <std::string> words_vector; 
-    std::stringstream check(line);  
-    std::string word; 
-      
-    while(getline(check, word, SEPARATOR)) 
-        mqtt_data.push_back(word); 
-}
+
 
 /* Line protocol format */
-std::string line_protocol(std::string ble_count, std::string wifi_count, std::string co2_level, std::string people_count)
+String line_protocol(String ble_count, String wifi_count, String co2_level, String people_count)
 {
   return "environment,location=us-midwest ble_count=" + ble_count + " wifi_count=" + wifi_count + " co2_level=" + co2_level + " people_count=" + people_count;
 }

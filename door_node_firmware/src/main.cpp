@@ -1,28 +1,24 @@
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
-#include <iostream>
 #include <iWifi.h>
 #include <definitions.h>
 
 WiFiClient esp_client;
 PubSubClient client(esp_client);
 iWifi my_wifi(SSID, PASSWORD);
-std::vector<std::string> mqtt_data;
-
 
 int people_counter, old_people_counter;
 unsigned int s1_value, s2_value;
 boolean s1_detected, s2_detected;
 unsigned long send_time;
-
+std::vector<String> mqtt_data;
 
 void reconnect();
 void counter_people();
 void send_mqtt_data();
-void callback(char *topic, byte *payload, size_t length);
+void callback(char *topic, byte *payload, unsigned int length);
 boolean check_data();
-std::string to_string(int number);
 boolean check_send_time();
 
 
@@ -40,14 +36,13 @@ void setup()
   my_wifi.connect();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
   client.setCallback(callback);
-  if (!client.connected())
-    reconnect();
+  reconnect();
   client.subscribe(scan_topic.c_str());
 }
 
-void show_list(std::vector<std::string> list)
+void show_list(std::vector<String> list)
 {
-  Serial.println("[");
+  Serial.print("[ ");
   for (size_t i = 0; i < list.size(); i++)
   {
     Serial.print(list[i].c_str());
@@ -58,7 +53,9 @@ void show_list(std::vector<std::string> list)
 }
 
 void loop() 
-{  
+{ 
+  //client.loop();
+
   s2_value = digitalRead(PIR2_PIN);
   //delay(250);
   s1_value = digitalRead(PIR1_PIN);
@@ -67,7 +64,7 @@ void loop()
 
   if(check_data() || check_send_time())
     send_mqtt_data();
-  show_list(mqtt_data);
+
   delay(5000);
 }
 
@@ -86,10 +83,23 @@ void reconnect()
   }
 }
 
-void callback(char *topic, byte *payload, size_t length)
+void callback(char *topic, byte *payload, unsigned int length)
 {
-  std::string s_payload(reinterpret_cast <const char *>(payload), length);
-  string_tokenizer(mqtt_data, s_payload);
+  String data;
+  mqtt_data.clear();
+  for (unsigned int i = 0; i < length; i++)
+  {
+    if(char(payload[i]) != '[' && char(payload[i]) != ']' && char(payload[i]) != SEPARATOR)
+    {
+      data += char(payload[i]);
+    } else if(char(payload[i]) == SEPARATOR)
+    {
+      mqtt_data.push_back(data);
+      data.clear();
+    }
+  }
+  Serial.println(mqtt_data.size());
+  Serial.println("yeee");
 }
 
 void counter_people()
@@ -127,7 +137,6 @@ void counter_people()
   if(s1_detected && s2_detected)
     s1_detected = s2_detected = false;
 
-  mqtt_data.push_back(to_string(people_counter));    
   delay(250);
 
 }
@@ -135,10 +144,9 @@ void counter_people()
 boolean check_data()
 {
   boolean send = false;
+  if(mqtt_data.size() == EMPTY)
+    send += true;
 
-  if(mqtt_data.size() > 0)
-      send += true; 
-  
   if(people_counter != old_people_counter)
   {
     old_people_counter = people_counter;
@@ -155,20 +163,14 @@ boolean check_send_time()
 
 void send_mqtt_data()
 {
+  mqtt_data.push_back(String(people_counter));
+
   client.loop();
-  client.publish(env_topic.c_str(), line_protocol(mqtt_data[BLE_INDEX], mqtt_data[WIFI_INDEX], mqtt_data[CO2_INDEX], mqtt_data[PEOPLE_INDEX]).c_str());
-  client.disconnect();
-  
+  //client.publish(env_topic.c_str(), line_protocol(mqtt_data[BLE_INDEX], mqtt_data[WIFI_INDEX], mqtt_data[CO2_INDEX], mqtt_data[PEOPLE_INDEX]).c_str());
+  //client.disconnect();
+
   send_time = millis();
-  mqtt_data.clear();
-}
 
-std::string to_string(int number)
-{
-  std::stringstream aux;
-  std::string result;
-  aux << number;
-  aux >> result;
+  //mqtt_data.clear();
 
-  return result;
 }
