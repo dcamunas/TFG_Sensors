@@ -12,7 +12,7 @@ const char *PASSWORD = "2+5+26+28=cumples";
 const char *MQTT_SERVER_NUC = "192.168.1.141";
 const char *MQTT_SERVER_VM = "192.168.1.175";
 
-#define MAX_SEND_TIME 300000
+#define MAX_SEND_TIME 120000
 
 /* PIR values */
 #define PIR1_PIN 15
