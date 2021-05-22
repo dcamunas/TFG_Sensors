@@ -8,10 +8,10 @@
 WiFiClient esp_client;
 PubSubClient client(esp_client);
 iWifi my_wifi(SSID, PASSWORD);
-std::vector<std::string> current_data, old_data;
+std::vector<std::string> mqtt_data;
 
 
-int people_counter;
+int people_counter, old_people_counter;
 unsigned int s1_value, s2_value;
 boolean s1_detected, s2_detected;
 unsigned long send_time;
@@ -28,7 +28,7 @@ boolean check_send_time();
 
 void setup() 
 {
-  people_counter = 0;
+  people_counter = old_people_counter = 0;
   s1_detected = s2_detected = false;
   s1_value = s2_value = 0;
   send_time = 0;
@@ -67,7 +67,8 @@ void loop()
 
   if(check_data() || check_send_time())
     send_mqtt_data();
-
+  show_list(mqtt_data);
+  delay(5000);
 }
 
 void reconnect()
@@ -88,7 +89,7 @@ void reconnect()
 void callback(char *topic, byte *payload, size_t length)
 {
   std::string s_payload(reinterpret_cast <const char *>(payload), length);
-  string_tokenizer(current_data, s_payload);
+  string_tokenizer(mqtt_data, s_payload);
 }
 
 void counter_people()
@@ -126,7 +127,7 @@ void counter_people()
   if(s1_detected && s2_detected)
     s1_detected = s2_detected = false;
 
-  current_data.push_back(to_string(people_counter));    
+  mqtt_data.push_back(to_string(people_counter));    
   delay(250);
 
 }
@@ -135,11 +136,13 @@ boolean check_data()
 {
   boolean send = false;
 
-  for(unsigned int i = 0; i < current_data.size(); i++)
-  {
-    if(current_data[i] != old_data[i])
-      old_data[i] = current_data[i];
+  if(mqtt_data.size() > 0)
       send += true; 
+  
+  if(people_counter != old_people_counter)
+  {
+    old_people_counter = people_counter;
+    send += true;
   }
 
   return send;
@@ -153,11 +156,11 @@ boolean check_send_time()
 void send_mqtt_data()
 {
   client.loop();
-  client.publish(env_topic.c_str(), line_protocol(current_data[BLE_INDEX], current_data[WIFI_INDEX], current_data[CO2_INDEX], current_data[PEOPLE_INDEX]).c_str());
+  client.publish(env_topic.c_str(), line_protocol(mqtt_data[BLE_INDEX], mqtt_data[WIFI_INDEX], mqtt_data[CO2_INDEX], mqtt_data[PEOPLE_INDEX]).c_str());
   client.disconnect();
   
   send_time = millis();
-  current_data.clear();
+  mqtt_data.clear();
 }
 
 std::string to_string(int number)

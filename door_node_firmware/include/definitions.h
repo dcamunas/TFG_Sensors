@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-#define BAUD_RATE 115200
+#define BAUD_RATE 9600
 
 /* Network´s values */
 #define MOSQUITTO_PORT 1883
@@ -30,6 +30,8 @@ String scan_topic = "node/" + NODE_ID + "/scan";
 String env_topic = "node/" + NODE_ID + "/environment";
 
 
+#define SEPARATOR ','
+
 void string_tokenizer(std::vector<std::string> mqtt_data, std::string line)
 {  
     // Vector of string to save tokens 
@@ -37,7 +39,7 @@ void string_tokenizer(std::vector<std::string> mqtt_data, std::string line)
     std::stringstream check(line);  
     std::string word; 
       
-    while(getline(check, word, ',')) 
+    while(getline(check, word, SEPARATOR)) 
         mqtt_data.push_back(word); 
 }
 
