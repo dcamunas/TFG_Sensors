@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <vector>
 
-#define BAUD_RATE 9600
+#define BAUD_RATE 115200
 
 /* Network´s values */
 #define MOSQUITTO_PORT 1883
@@ -10,7 +10,7 @@ const char *PASSWORD = "2+5+26+28=cumples";
 const char *MQTT_SERVER_NUC = "192.168.1.141";
 const char *MQTT_SERVER_VM = "192.168.1.175";
 
-#define MAX_SEND_TIME 120000
+#define MAX_SEND_TIME 30000
 
 /* PIR values */
 #define PIR1_PIN 15
@@ -31,6 +31,7 @@ String env_topic = "node/" + NODE_ID + "/room";
 #define SEPARATOR ','
 #define EMPTY      0
 
+// My Stringtokenizer
 std::vector<String> my_stringtokenizer(String data)
 {
   std::vector<String> array;

@@ -56,30 +56,25 @@ void loop()
   s2_value = digitalRead(PIR2_PIN);
   //delay(250);
   s1_value = digitalRead(PIR1_PIN);
+    Serial.println("s1= " + String(s1_value) + "|s2=" + String(s2_value));
+
 
   counter_people();
 
   if (check_data() || check_send_time())
     send_data();
-
-  delay(5000);
 }
 
 void reconnect()
 {
   while (!client.connected())
   {
-    //Serial.print("Attempting MQTT connection...");
     if (client.connect("esp32_door"))
     {
-      //Serial.println("Connected.");
       client.subscribe(scan_topic.c_str());
     }
     else
     {
-      //Serial.print("failed, rc=");
-      //Serial.print(client.state());
-      //Serial.println(" try again in 2 seconds");
       delay(2000);
     }
     //yield();
@@ -158,9 +153,10 @@ boolean check_send_time()
 void send_data()
 {
   data.push_back(String(people_counter));
-  Serial.println(data.size());
-  show_list(data);
-  client.publish(env_topic.c_str(), line_protocol(data[BLE_INDEX], data[WIFI_INDEX], data[CO2_INDEX], data[PEOPLE_INDEX]).c_str());
+  data.size() == 1 ? 
+    client.publish(env_topic.c_str(), line_protocol("0", "0", "0", data[PEOPLE_INDEX - 3]).c_str()) :
+    client.publish(env_topic.c_str(), line_protocol(data.at(BLE_INDEX), data.at(WIFI_INDEX), data.at(CO2_INDEX), data.at(PEOPLE_INDEX)).c_str());
+  
   mqtt_recv_data.clear();
   send_time = millis();
 }
