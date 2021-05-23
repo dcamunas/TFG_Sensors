@@ -12,11 +12,12 @@ int people_counter, old_people_counter;
 unsigned int s1_value, s2_value;
 boolean s1_detected, s2_detected;
 unsigned long send_time;
-std::vector<String> mqtt_data;
+std::vector<String> data;
+String mqtt_recv_data;
 
 void reconnect();
 void counter_people();
-void send_mqtt_data();
+void send_data();
 void callback(char *topic, byte *payload, unsigned int length);
 boolean check_data();
 boolean check_send_time();
@@ -54,7 +55,11 @@ void show_list(std::vector<String> list)
 
 void loop() 
 { 
-  //client.loop();
+  /*if(!client.connected())
+    reconnect();*/
+  client.loop();
+  
+  Serial.println("L: " + mqtt_recv_data);
 
   s2_value = digitalRead(PIR2_PIN);
   //delay(250);
@@ -63,7 +68,7 @@ void loop()
   counter_people();
 
   if(check_data() || check_send_time())
-    send_mqtt_data();
+    send_data();
 
   delay(5000);
 }
@@ -85,21 +90,12 @@ void reconnect()
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  String data;
-  mqtt_data.clear();
+  mqtt_recv_data.clear();
   for (unsigned int i = 0; i < length; i++)
-  {
-    if(char(payload[i]) != '[' && char(payload[i]) != ']' && char(payload[i]) != SEPARATOR)
-    {
-      data += char(payload[i]);
-    } else if(char(payload[i]) == SEPARATOR)
-    {
-      mqtt_data.push_back(data);
-      data.clear();
-    }
-  }
-  Serial.println(mqtt_data.size());
-  Serial.println("yeee");
+    if(char(payload[i]) != '[' && char(payload[i]) != ']')
+      mqtt_recv_data += char(payload[i]);
+  
+  Serial.println(mqtt_recv_data);
 }
 
 void counter_people()
@@ -144,7 +140,7 @@ void counter_people()
 boolean check_data()
 {
   boolean send = false;
-  if(mqtt_data.size() == EMPTY)
+  if(data.size() == EMPTY)
     send += true;
 
   if(people_counter != old_people_counter)
@@ -161,16 +157,16 @@ boolean check_send_time()
   return (millis() - send_time) >= MAX_SEND_TIME;
 }
 
-void send_mqtt_data()
+void send_data()
 {
-  mqtt_data.push_back(String(people_counter));
+  data.push_back(String(people_counter));
 
   client.loop();
-  //client.publish(env_topic.c_str(), line_protocol(mqtt_data[BLE_INDEX], mqtt_data[WIFI_INDEX], mqtt_data[CO2_INDEX], mqtt_data[PEOPLE_INDEX]).c_str());
+  //client.publish(env_topic.c_str(), line_protocol(data[BLE_INDEX], data[WIFI_INDEX], data[CO2_INDEX], data[PEOPLE_INDEX]).c_str());
   //client.disconnect();
 
   send_time = millis();
 
-  //mqtt_data.clear();
+  //data.clear();
 
 }
