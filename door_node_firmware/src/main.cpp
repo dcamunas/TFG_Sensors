@@ -12,8 +12,8 @@ int people_counter, old_people_counter;
 unsigned int s1_value, s2_value;
 boolean s1_detected, s2_detected;
 unsigned long send_time;
-std::vector<String> data;
 String mqtt_recv_data;
+std::vector<String> data;
 
 void reconnect();
 void counter_people();
@@ -23,7 +23,7 @@ boolean check_data();
 boolean check_send_time();
 
 
-void setup() 
+void setup()
 {
   people_counter = old_people_counter = 0;
   s1_detected = s2_detected = false;
@@ -37,29 +37,21 @@ void setup()
   my_wifi.connect();
   client.setServer(MQTT_SERVER_VM, MOSQUITTO_PORT);
   client.setCallback(callback);
-  reconnect();
-  client.subscribe(scan_topic.c_str());
 }
 
 void show_list(std::vector<String> list)
 {
   Serial.print("[ ");
-  for (size_t i = 0; i < list.size(); i++)
-  {
-    Serial.print(list[i].c_str());
-    Serial.print(", ");
-  }
+  for (unsigned int i = 0; i < list.size(); i++)
+    Serial.print(list.at(i) + ", ");
   Serial.println("]");
-  
 }
 
-void loop() 
-{ 
-  /*if(!client.connected())
-    reconnect();*/
+void loop()
+{
+  if (!client.connected())
+    reconnect();
   client.loop();
-  
-  Serial.println("L: " + mqtt_recv_data);
 
   s2_value = digitalRead(PIR2_PIN);
   //delay(250);
@@ -67,7 +59,7 @@ void loop()
 
   counter_people();
 
-  if(check_data() || check_send_time())
+  if (check_data() || check_send_time())
     send_data();
 
   delay(5000);
@@ -77,14 +69,20 @@ void reconnect()
 {
   while (!client.connected())
   {
-    if (!client.connect("esp32_door"))
+    //Serial.print("Attempting MQTT connection...");
+    if (client.connect("esp32_door"))
     {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      delay(2500);    
+      //Serial.println("Connected.");
+      client.subscribe(scan_topic.c_str());
     }
-    yield();
+    else
+    {
+      //Serial.print("failed, rc=");
+      //Serial.print(client.state());
+      //Serial.println(" try again in 2 seconds");
+      delay(2000);
+    }
+    //yield();
   }
 }
 
@@ -92,10 +90,8 @@ void callback(char *topic, byte *payload, unsigned int length)
 {
   mqtt_recv_data.clear();
   for (unsigned int i = 0; i < length; i++)
-    if(char(payload[i]) != '[' && char(payload[i]) != ']')
+    if (char(payload[i]) != '[' && char(payload[i]) != ']')
       mqtt_recv_data += char(payload[i]);
-  
-  Serial.println(mqtt_recv_data);
 }
 
 void counter_people()
@@ -103,11 +99,10 @@ void counter_people()
   switch (s1_value)
   {
   case HIGH:
-    if(!s1_detected)
+    if (!s1_detected)
       s1_detected = true;
-    else
-      if(s2_detected)
-        people_counter > 0 ? people_counter-- : people_counter = 0;
+    else if (s2_detected)
+      people_counter > 0 ? people_counter-- : people_counter = 0;
     break;
   // LOW
   default:
@@ -118,34 +113,37 @@ void counter_people()
   switch (s2_value)
   {
   case HIGH:
-    if(!s2_detected)
+    if (!s2_detected)
       s2_detected = true;
-    else
-      if(s1_detected)
-        people_counter++;
-    break;  
+    else if (s1_detected)
+      people_counter++;
+    break;
   // LOW
   default:
     s2_detected = false;
     break;
   }
 
-  if(s1_detected && s2_detected)
+  if (s1_detected && s2_detected)
     s1_detected = s2_detected = false;
 
   delay(250);
-
 }
 
 boolean check_data()
 {
   boolean send = false;
-  if(data.size() == EMPTY)
-    send += true;
 
-  if(people_counter != old_people_counter)
+  if (people_counter != old_people_counter)
   {
     old_people_counter = people_counter;
+    send += true;
+  }
+
+  if (mqtt_recv_data.length() != EMPTY)
+  {
+    data = my_stringtokenizer(mqtt_recv_data);
+    mqtt_recv_data.clear();
     send += true;
   }
 
@@ -160,13 +158,9 @@ boolean check_send_time()
 void send_data()
 {
   data.push_back(String(people_counter));
-
-  client.loop();
-  //client.publish(env_topic.c_str(), line_protocol(data[BLE_INDEX], data[WIFI_INDEX], data[CO2_INDEX], data[PEOPLE_INDEX]).c_str());
-  //client.disconnect();
-
+  Serial.println(data.size());
+  show_list(data);
+  client.publish(env_topic.c_str(), line_protocol(data[BLE_INDEX], data[WIFI_INDEX], data[CO2_INDEX], data[PEOPLE_INDEX]).c_str());
+  mqtt_recv_data.clear();
   send_time = millis();
-
-  //data.clear();
-
 }

@@ -21,20 +21,37 @@ const char *MQTT_SERVER_VM = "192.168.1.175";
 #define BLE_INDEX       0
 #define WIFI_INDEX      1
 #define CO2_INDEX       2
-#define PEOPLE_INDEX    4
+#define PEOPLE_INDEX    3
 
 String NODE_ID = "1";
 String scan_topic = "node/" + NODE_ID + "/scan";
-String env_topic = "node/" + NODE_ID + "/environment";
+String env_topic = "node/" + NODE_ID + "/room";
 
 
 #define SEPARATOR ','
 #define EMPTY      0
 
-
+std::vector<String> my_stringtokenizer(String data)
+{
+  std::vector<String> array;
+  String data_aux;
+  for (unsigned int i = 0; i < data.length(); i++)
+  {
+    if(data[i] != SEPARATOR)
+        data_aux += data[i];
+    else
+    {
+      array.push_back(data_aux);
+      data_aux.clear();
+    }
+  }
+  // Last parameter (CO2)
+  array.push_back(data_aux);
+  return array;
+}
 
 /* Line protocol format */
-String line_protocol(String ble_count, String wifi_count, String co2_level, String people_count)
+String line_protocol(String ble, String wifi, String co2, String people)
 {
-  return "environment,location=us-midwest ble_count=" + ble_count + " wifi_count=" + wifi_count + " co2_level=" + co2_level + " people_count=" + people_count;
+  return "room,location=us-midwest ble=" + ble + " wifi=" + wifi + " co2=" + co2 + " people=" + people;
 }
