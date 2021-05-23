@@ -53,12 +53,6 @@ void loop()
     reconnect();
   client.loop();
 
-  s2_value = digitalRead(PIR2_PIN);
-  //delay(250);
-  s1_value = digitalRead(PIR1_PIN);
-    Serial.println("s1= " + String(s1_value) + "|s2=" + String(s2_value));
-
-
   counter_people();
 
   if (check_data() || check_send_time())
@@ -91,6 +85,10 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 void counter_people()
 {
+  s2_value = digitalRead(PIR2_PIN);
+  delay(250);
+  s1_value = digitalRead(PIR1_PIN);
+
   switch (s1_value)
   {
   case HIGH:
