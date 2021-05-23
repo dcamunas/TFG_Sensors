@@ -187,7 +187,7 @@ void send_mqtt_data()
     reconnect();
   client.loop();
 
-  client.publish(scan_topic.c_str(), line_protocol(ble_devs_count, my_wifi.get_devices_number(), my_ndir.get_co2_value()).c_str());
+  client.publish(scan_topic.c_str(), line_protocol(old_ble_devs_count, old_wifi_devs_count, old_co2_value).c_str());
   
   client.disconnect();
 
@@ -202,7 +202,7 @@ boolean check_send_time()
 
 boolean check_co2_level()
 {
-  if (my_ndir.get_co2_value() != old_co2_value)
+  if (my_ndir.get_co2_value() != old_co2_value && (my_ndir.get_co2_value() > MAX_CO2_VALUE && my_ndir.get_co2_value() < MIN_CO2_VALUE))
   {
     old_co2_value = my_ndir.get_co2_value();
     return true;
