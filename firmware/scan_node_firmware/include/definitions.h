@@ -6,8 +6,7 @@
 #define MOSQUITTO_PORT 1883
 const char *SSID = "Home";
 const char *PASSWORD = "2+5+26+28=cumples";
-const char *MQTT_SERVER_NUC = "192.168.1.141";
-const char *MQTT_SERVER_VM = "192.168.1.175";
+const char *MQTT_SERVER_VM = "192.168.1.188";
 
 /* Promiscuous mode */
 #define OFFLINE 0
