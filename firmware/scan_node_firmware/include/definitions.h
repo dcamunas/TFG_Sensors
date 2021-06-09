@@ -25,6 +25,6 @@ const char *MQTT_SERVER_VM = "192.168.1.188";
 /* MQTT Topics */
 //#define ACTIVATE    1
 //#define DESACTIVATE 0
-String NODE_ID = "1";
-String scan_topic = "node/" + NODE_ID + "/scan";
+String ROOM_ID = "1";
+String scan_topic = "room/" + ROOM_ID + "/scan";
 

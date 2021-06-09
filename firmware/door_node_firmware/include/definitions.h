@@ -9,7 +9,7 @@ const char *SSID = "Home";
 const char *PASSWORD = "2+5+26+28=cumples";
 const char *MQTT_SERVER_VM = "192.168.1.188";
 
-#define MAX_SEND_TIME 30000
+#define MAX_SEND_TIME 5000
 
 /* PIR values */
 #define PIR1_PIN 15
@@ -22,9 +22,9 @@ const char *MQTT_SERVER_VM = "192.168.1.188";
 #define CO2_INDEX       2
 #define PEOPLE_INDEX    3
 
-String NODE_ID = "1";
-String scan_topic = "node/" + NODE_ID + "/scan";
-String env_topic = "node/" + NODE_ID + "/room";
+String ROOM_ID = "1";
+String scan_topic = "room/" + ROOM_ID + "/scan";
+String env_topic = "room/" + ROOM_ID + "/state";
 
 
 #define SEPARATOR ','
@@ -53,5 +53,5 @@ std::vector<String> my_stringtokenizer(String data)
 /* Line protocol format */
 String line_protocol(String ble, String wifi, String co2, String people)
 {
-  return "room,location=us-midwest ble=" + ble + " wifi=" + wifi + " co2=" + co2 + " people=" + people;
+  return "state ble=" + ble + ",wifi=" + wifi + ",co2=" + co2 + ",people=" + people;
 }
